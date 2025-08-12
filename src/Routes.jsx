@@ -2,7 +2,8 @@ import React from "react";
 import { BrowserRouter, Routes as RouterRoutes, Route } from "react-router-dom";
 import ScrollToTop from "components/ScrollToTop";
 import ErrorBoundary from "components/ErrorBoundary";
-// Add your imports here
+
+// Pages
 import Homepage from "pages/homepage";
 import About from "pages/about";
 import Services from "pages/services";
@@ -14,21 +15,20 @@ import NotFound from "pages/NotFound";
 
 const Routes = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL || "/"}>
       <ErrorBoundary>
-      <ScrollToTop />
-      <RouterRoutes>
-        {/* Define your routes here */}
-        <Route path="/" element={<Homepage />} />
-        <Route path="/homepage" element={<Homepage />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/services" element={<Services />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/blog" element={<BlogCatalog />} />
-        <Route path="/blog/:slug" element={<BlogDetail />} />
-        <Route path="/projects" element={<Projects />} />
-        <Route path="*" element={<NotFound />} />
-      </RouterRoutes>
+        <ScrollToTop />
+        <RouterRoutes>
+          <Route path="/" element={<Homepage />} />
+          <Route path="/homepage" element={<Homepage />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/blog" element={<BlogCatalog />} />
+          <Route path="/blog/:slug" element={<BlogDetail />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="*" element={<NotFound />} />
+        </RouterRoutes>
       </ErrorBoundary>
     </BrowserRouter>
   );
