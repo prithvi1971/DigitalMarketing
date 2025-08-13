@@ -62,7 +62,8 @@
   "preview": "vite preview --port 4029",
   "build": "vite build",
   "build:pages": "vite build --mode gh",
-  "publish": "npm run build:pages && git add -A && git commit -m \"publish: update /docs for GitHub Pages\" || echo skipping-commit && git push origin main"
+  "publish": "npm run build:pages && git add -A && (git commit -m \"publish: update /docs for GitHub Pages\" || echo no-commit) && git push origin main"
+
 },
   "eslintConfig": {
     "extends": [
