@@ -4,27 +4,27 @@ import Icon from '../../../components/AppIcon';
 const TrustSignals = () => {
   const certifications = [
     {
-      name: 'Google Partner',
+      name: 'Google Anlalytics',
       icon: 'Award',
       description: 'Premier Google Ads & Analytics certified',
       level: 'Premier'
     },
     {
-      name: 'Facebook Marketing Partner',
+      name: 'Meta Ads',
       icon: 'Shield',
       description: 'Advanced Facebook & Instagram advertising',
       level: 'Advanced'
     },
     {
-      name: 'HubSpot Solutions Partner',
+      name: 'Email marketing',
       icon: 'Star',
       description: 'Platinum-level inbound marketing expertise',
       level: 'Platinum'
     },
     {
-      name: 'Salesforce Certified',
+      name: 'Automation',
       icon: 'CheckCircle',
-      description: 'Marketing Cloud & CRM integration',
+      description: 'Marketing Cloud, CRM integration & computing',
       level: 'Certified'
     }
   ];
@@ -107,7 +107,7 @@ const TrustSignals = () => {
         </div>
 
         {/* Client Statistics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+        {/* <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
           {clientStats.map((stat, index) => (
             <div key={index} className="text-center">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -117,13 +117,13 @@ const TrustSignals = () => {
               <div className="text-sm text-text-secondary">{stat.label}</div>
             </div>
           ))}
-        </div>
+        </div> */}
 
         {/* Certifications */}
         <div className="mb-16">
-          <h3 className="text-2xl font-bold text-foreground text-center mb-8">
+          {/* <h3 className="text-2xl font-bold text-foreground text-center mb-8">
             Industry Certifications & Partnerships
-          </h3>
+          </h3> */}
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {certifications.map((cert, index) => (
@@ -142,7 +142,7 @@ const TrustSignals = () => {
         </div>
 
         {/* Security & Privacy */}
-        <div className="mb-16">
+        {/* <div className="mb-16">
           <h3 className="text-2xl font-bold text-foreground text-center mb-8">
             Security & Privacy Standards
           </h3>
@@ -158,10 +158,10 @@ const TrustSignals = () => {
               </div>
             ))}
           </div>
-        </div>
+        </div> */}
 
         {/* Service Guarantees */}
-        <div className="bg-card rounded-2xl p-8 shadow-brand-lg">
+        {/* <div className="bg-card rounded-2xl p-8 shadow-brand-lg">
           <h3 className="text-2xl font-bold text-foreground text-center mb-8">
             Our Service Guarantees
           </h3>
@@ -191,7 +191,7 @@ const TrustSignals = () => {
               <span className="font-medium">All guarantees backed by our Service Level Agreement</span>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </section>
   );
