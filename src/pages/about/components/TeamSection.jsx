@@ -12,7 +12,7 @@ const TeamSection = () => {
     name: "Prithvi Pandya",
     role: "Account Manager",
     department: "leadership",
-    image: "https://media.licdn.com/dms/image/v2/D4E03AQE1_68R3G22vw/profile-displayphoto-shrink_800_800/profile-displayphoto-shrink_800_800/0/1698979324713?e=1757548800&v=beta&t=Wes-N0106q0mh4aeaH-M1xo0ggv5o52J_WxpMqRkxDQ",
+    image: '/assets/images/about/strategist/PrithviPandya.png',
     bio: "Client-first communicator who ensures seamless delivery, strategic alignment, and results tracking across all campaigns.",
     specialties: ["Client Success", "Project Coordination", "Campaign Reporting"],
     certifications: ["Project Management Certified", "HubSpot & Mailchimp Client Management"],
@@ -25,7 +25,7 @@ const TeamSection = () => {
     name: "Jay Mehta",
     role: "Graphic Designer",
     department: "creative",
-    image: "https://media.licdn.com/dms/image/v2/D4D35AQH6rRh63PHWGw/profile-framedphoto-shrink_800_800/B4DZgqeC3oHAAk-/0/1753059176212?e=1755194400&v=beta&t=5szlBPlMMsgsot5l4wVgclPbzy6QOqraFTLM1J-rmbs",
+    image: '/assets/images/about/strategist/JayMehta.png',
     bio: "Design-driven creative focused on building bold, conversion-optimized visuals across web, ads, and social campaigns.",
     specialties: ["Brand Design", "Ad Creatives", "UI Graphics", "Content Design"],
     certifications: ["Adobe Illustrator Certified", "Canva Brand Designer"],
@@ -38,7 +38,7 @@ const TeamSection = () => {
     name: "Sahil Lalani",
     role: "Email Marketing Specialist",
     department: "strategy",
-    image: "https://images.unsplash.com/photo-1603415526960-f8f0f5f79e10?w=400&h=400&fit=crop",
+    image: '/assets/images/about/strategist/SahilLalani.png',
     bio: "Specializes in lifecycle email strategies that turn subscribers into customers and customers into brand advocates.",
     specialties: ["Email Automation", "Lead Nurturing", "Campaign Optimization"],
     certifications: ["Klaviyo Partner Certified", "HubSpot Email Certified"],
@@ -51,7 +51,7 @@ const TeamSection = () => {
     name: "Yash Jani",
     role: "Social Media Manager",
     department: "media",
-    image: "https://images.unsplash.com/photo-1614289180154-d307b1e0ecb1?w=400&h=400&fit=crop",
+    image: '/assets/images/about/strategist/YashJani.png',
     bio: "Crafts engaging social strategies that drive brand reach, community growth, and content virality across platforms.",
     specialties: ["Content Calendars", "Platform Growth", "Reels & Shorts"],
     certifications: ["Meta Social Media Strategy", "Hootsuite Certified"],
@@ -64,7 +64,7 @@ const TeamSection = () => {
     name: "Ravish Virani",
     role: "Web Developer",
     department: "creative",
-    image: "https://images.unsplash.com/photo-1603415527153-9f4f3a7200a8?w=400&h=400&fit=crop",
+    image: '/assets/images/about/strategist/RavishVirani.png',
     bio: "Frontend-focused web developer crafting high-performance marketing sites optimized for speed, SEO, and conversions.",
     specialties: ["React & Next.js", "Website Optimization", "Technical SEO"],
     certifications: ["Google Mobile Web Certified", "Netlify Developer Partner"],
@@ -72,19 +72,19 @@ const TeamSection = () => {
     linkedin: "#",
     email: "eli@marketforcepro.com"
   },
-  {
-    id: 6,
-    name: "Noah Rivera",
-    role: "Paid Media Specialist",
-    department: "analytics",
-    image: "https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?w=400&h=400&fit=crop",
-    bio: "Digital media strategist optimizing ad performance across Google, Meta, and LinkedIn with a data-first approach to scale ROAS.",
-    specialties: ["PPC Campaigns", "Retargeting Funnels", "Cross-Platform Budgeting"],
-    certifications: ["Google Ads Certified", "Meta Media Buying Professional"],
-    funFact: "Runs a personal dashboard that tracks live ad performance across 9 accounts",
-    linkedin: "#",
-    email: "noah@marketforcepro.com"
-  }
+  // {
+  //   id: 6,
+  //   name: "Noah Rivera",
+  //   role: "Paid Media Specialist",
+  //   department: "analytics",
+  //   image: "https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?w=400&h=400&fit=crop",
+  //   bio: "Digital media strategist optimizing ad performance across Google, Meta, and LinkedIn with a data-first approach to scale ROAS.",
+  //   specialties: ["PPC Campaigns", "Retargeting Funnels", "Cross-Platform Budgeting"],
+  //   certifications: ["Google Ads Certified", "Meta Media Buying Professional"],
+  //   funFact: "Runs a personal dashboard that tracks live ad performance across 9 accounts",
+  //   linkedin: "#",
+  //   email: "noah@marketforcepro.com"
+  // }
   ];
 
   const departments = [
@@ -115,8 +115,8 @@ const TeamSection = () => {
           </div>
           
           <h2 className="text-3xl lg:text-5xl font-bold text-text-primary mb-6">
-            Meet the Strategists Behind
-            <span className="text-gradient block">Your Success</span>
+            Meet Our New Hires
+            <span className="text-gradient block">Built to Accelerate Your Growth</span>
           </h2>
           
           <p className="text-lg text-text-secondary leading-relaxed">

@@ -44,6 +44,7 @@
     "lucide-react": "^0.484.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-google-recaptcha": "^3.1.0",
     "react-helmet": "^6.1.0",
     "react-hook-form": "^7.55.0",
     "react-router-dom": "6.0.2",
@@ -55,16 +56,15 @@
     "tailwindcss-elevation": "^2.0.0",
     "tailwindcss-fluid-type": "^2.0.7"
   },
-"scripts": {
-  "dev": "vite",
-  "start": "vite",
-  "serve": "vite preview",
-  "preview": "vite preview --port 4029",
-  "build": "vite build",
-  "build:pages": "vite build --mode gh",
-  "publish": "npm run build:pages && git add -A && (git commit -m \"publish: update /docs for GitHub Pages\" || echo no-commit) && git push origin main"
-
-},
+  "scripts": {
+    "dev": "vite",
+    "start": "vite",
+    "serve": "vite preview",
+    "preview": "vite preview --port 4029",
+    "build": "vite build",
+    "build:pages": "vite build --mode gh",
+    "publish": "npm run build:pages && git add -A && (git commit -m \"publish: update /docs for GitHub Pages\" || echo no-commit) && git push origin main"
+  },
   "eslintConfig": {
     "extends": [
       "react-app",

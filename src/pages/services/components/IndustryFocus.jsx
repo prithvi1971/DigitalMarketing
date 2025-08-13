@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Image from '../../../components/AppImage';
-
+import { Link } from "react-router-dom";
 const IndustryFocus = () => {
+  
   const [activeIndustry, setActiveIndustry] = useState('saas');
 
   const industries = [
@@ -32,7 +33,7 @@ const IndustryFocus = () => {
       },
       stats: {
         avgGrowth: '285%',
-        clientCount: '45+',
+        clientCount: '16+',
         avgROI: '320%'
       }
     },
@@ -61,7 +62,7 @@ const IndustryFocus = () => {
       },
       stats: {
         avgGrowth: '220%',
-        clientCount: '38+',
+        clientCount: '14+',
         avgROI: '280%'
       }
     },
@@ -90,7 +91,7 @@ const IndustryFocus = () => {
       },
       stats: {
         avgGrowth: '195%',
-        clientCount: '32+',
+        clientCount: '12+',
         avgROI: '240%'
       }
     },
@@ -119,7 +120,7 @@ const IndustryFocus = () => {
       },
       stats: {
         avgGrowth: '175%',
-        clientCount: '28+',
+        clientCount: '8+',
         avgROI: '210%'
       }
     }
@@ -245,7 +246,7 @@ const IndustryFocus = () => {
                   iconPosition="right"
                   className="border-blue-200 text-blue-700 hover:bg-blue-50"
                 >
-                  Let's Talk
+                  <Link to="/contact">Let's Talk</Link>
                 </Button>
               </div>
             </div>

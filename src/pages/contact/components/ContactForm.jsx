@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
+import ReCAPTCHA from 'react-google-recaptcha';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
@@ -35,6 +36,11 @@ const timelineOptions = [
   'Ongoing partnership',
 ];
 
+// ❗ use your real site key (you shared this earlier)
+const RECAPTCHA_SITE_KEY = '6LfuC48rAAAAAOaKLBMki5Jey30-8_QcG4YxYyTX';
+// ❗ secure Edge Function URL (never expose service keys in the client)
+const EDGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/contact-submit`;
+
 const ContactForm = () => {
   const [formData, setFormData] = useState({
     firstName: '',
@@ -56,6 +62,12 @@ const ContactForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [showMore, setShowMore] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+
+  // ❗ invisible reCAPTCHA + honeypot + light rate limit
+  const recaptchaRef = useRef(null);
+  const honeypotRef = useRef(null);
+  const [lastSubmitAt, setLastSubmitAt] = useState(0); // 30s client cooldown
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -78,7 +90,14 @@ const ContactForm = () => {
       !!formData.privacy &&
       !isSubmitting
     );
-  }, [formData.firstName, formData.email, formData.companyOrWebsite, formData.projectType, formData.privacy, isSubmitting]);
+  }, [
+    formData.firstName,
+    formData.email,
+    formData.companyOrWebsite,
+    formData.projectType,
+    formData.privacy,
+    isSubmitting,
+  ]);
 
   const validateForm = () => {
     const errs = {};
@@ -94,16 +113,51 @@ const ContactForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitError('');
     if (!validateForm()) return;
 
-    setIsSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1500)); // simulate API call
-    setIsSubmitting(false);
-    setSubmitSuccess(true);
+    // simple client-side cooldown to deter spam bursts
+    const now = Date.now();
+    if (now - lastSubmitAt < 30_000) {
+      setSubmitError('Please wait a few seconds before trying again.');
+      return;
+    }
 
-    // ❌ removed auto-reset timer — success view persists until page reload
-    // If you want a manual reset button, uncomment:
-    // setSubmitSuccess(true);
+    setIsSubmitting(true);
+    try {
+      // get an invisible reCAPTCHA token
+      const token = await recaptchaRef.current.executeAsync();
+      recaptchaRef.current.reset();
+
+      // include honeypot value (bots will fill it)
+      const honeypot = honeypotRef.current?.value || '';
+
+      const res = await fetch(EDGE_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, recaptchaToken: token, honeypot }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data?.error) {
+        // mirror a friendly message; real details are handled server-side
+        const msg =
+          data?.error === 'rate_limited_ip' || data?.error === 'rate_limited_email'
+            ? 'Too many attempts. Please try again later.'
+            : data?.error === 'captcha_failed'
+            ? 'Robot check failed. Please try again.'
+            : 'We could not submit your request. Please try again.';
+        throw new Error(msg);
+      }
+
+      setSubmitSuccess(true);
+      setLastSubmitAt(now);
+    } catch (err) {
+      console.error(err);
+      setSubmitError(err.message || 'Something went wrong. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submitSuccess) {
@@ -118,9 +172,8 @@ const ContactForm = () => {
             <p className="text-text-secondary mb-6 max-w-2xl mx-auto">
               You’ll get a reply within 24 hours with next steps and time slots for a discovery call.
             </p>
-            {/* Optional: allow another submission without reload
-            <Button onClick={() => { setSubmitSuccess(false); }}
-              className="bg-accent hover:bg-accent/90">
+            {/* If you want a manual reset button, uncomment:
+            <Button onClick={() => setSubmitSuccess(false)} className="bg-accent hover:bg-accent/90">
               Submit another request
             </Button> */}
           </div>
@@ -141,6 +194,18 @@ const ContactForm = () => {
               Quick form. Real humans. We’ll tailor our first call to your needs.
             </p>
           </div>
+
+          {/* ❗ Invisible reCAPTCHA + honeypot */}
+          <ReCAPTCHA ref={recaptchaRef} sitekey={RECAPTCHA_SITE_KEY} size="invisible" />
+          <input
+            ref={honeypotRef}
+            type="text"
+            name="company_extra"
+            tabIndex={-1}
+            autoComplete="off"
+            className="absolute left-[-9999px] top-auto w-px h-px opacity-0"
+            aria-hidden="true"
+          />
 
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Essentials */}
@@ -202,17 +267,13 @@ const ContactForm = () => {
                   );
                 })}
               </div>
-              {errors.projectType && (
-                <p className="mt-2 text-sm text-destructive">{errors.projectType}</p>
-              )}
+              {errors.projectType && <p className="mt-2 text-sm text-destructive">{errors.projectType}</p>}
             </div>
 
             {/* Optional qualifiers */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Budget (optional)
-                </label>
+                <label className="block text-sm font-medium text-foreground mb-2">Budget (optional)</label>
                 <select
                   name="budget"
                   value={formData.budget}
@@ -221,14 +282,14 @@ const ContactForm = () => {
                 >
                   <option value="">Select budget</option>
                   {budgetRanges.map((b) => (
-                    <option key={b} value={b}>{b}</option>
+                    <option key={b} value={b}>
+                      {b}
+                    </option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  Timeline (optional)
-                </label>
+                <label className="block text-sm font-medium text-foreground mb-2">Timeline (optional)</label>
                 <select
                   name="timeline"
                   value={formData.timeline}
@@ -237,7 +298,9 @@ const ContactForm = () => {
                 >
                   <option value="">Select timeline</option>
                   {timelineOptions.map((t) => (
-                    <option key={t} value={t}>{t}</option>
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -245,9 +308,7 @@ const ContactForm = () => {
 
             {/* Short message */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Anything else? (optional)
-              </label>
+              <label className="block text-sm font-medium text-foreground mb-2">Anything else? (optional)</label>
               <textarea
                 name="notes"
                 value={formData.notes}
@@ -260,11 +321,7 @@ const ContactForm = () => {
 
             {/* Progressive details */}
             {!showMore ? (
-              <button
-                type="button"
-                onClick={() => setShowMore(true)}
-                className="text-sm text-primary underline"
-              >
+              <button type="button" onClick={() => setShowMore(true)} className="text-sm text-primary underline">
                 Add more details (phone, goals, past efforts)
               </button>
             ) : (
@@ -286,11 +343,9 @@ const ContactForm = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md-grid-cols-2 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Business Goals (optional)
-                    </label>
+                    <label className="block text-sm font-medium text-foreground mb-2">Business Goals (optional)</label>
                     <textarea
                       name="goals"
                       value={formData.goals}
@@ -301,9 +356,7 @@ const ContactForm = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Previous Marketing (optional)
-                    </label>
+                    <label className="block text-sm font-medium text-foreground mb-2">Previous Marketing (optional)</label>
                     <textarea
                       name="previousExperience"
                       value={formData.previousExperience}
@@ -335,6 +388,7 @@ const ContactForm = () => {
                 error={errors.privacy}
                 required
               />
+              {!!submitError && <p className="text-sm text-destructive">{submitError}</p>}
             </div>
 
             {/* Submit */}
@@ -349,9 +403,7 @@ const ContactForm = () => {
                 aria-disabled={!canSubmit}
                 className={[
                   'transition-colors',
-                  canSubmit
-                    ? 'bg-blue-600 hover:bg-blue-700'
-                    : 'bg-slate-300 hover:bg-slate-300 cursor-not-allowed',
+                  canSubmit ? 'bg-blue-600 hover:bg-blue-700' : 'bg-slate-300 hover:bg-slate-300 cursor-not-allowed',
                 ].join(' ')}
                 iconName="Send"
                 iconPosition="right"

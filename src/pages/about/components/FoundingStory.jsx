@@ -12,7 +12,7 @@ const FoundingStory = () => {
     {
       year: "2020",
       title: "First Breakthrough",
-      description: "Drove 300% growth in under 6 months for an early-stage SaaS startup through clear positioning, conversion-focused content, and performance marketing."
+      description: "Drove 3x growth in under 6 months for an early-stage SaaS startup through clear positioning, conversion-focused content, and performance marketing."
     },
     {
       year: "2022",
