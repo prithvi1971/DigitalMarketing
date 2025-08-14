@@ -18,53 +18,25 @@ const projectTypes = [
   'Other / Multiple',
 ];
 
-const budgetRanges = [
-  '$5k – $15k / mo',
-  '$15k – $30k / mo',
-  '$30k – $50k / mo',
-  '$50k – $100k / mo',
-  '$100k+ / mo',
-  'Project-based',
-];
-
-const timelineOptions = [
-  'ASAP',
-  'Within 1 month',
-  '1–3 months',
-  '3–6 months',
-  '6+ months',
-  'Ongoing partnership',
-];
-
-// ❗ use your real site key (you shared this earlier)
-const RECAPTCHA_SITE_KEY = '6LfuC48rAAAAAOaKLBMki5Jey30-8_QcG4YxYyTX';
-// ❗ secure Edge Function URL (never expose service keys in the client)
-const EDGE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/contact-submit`;
+const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+const EDGE_URL = `${import.meta.env.VITE_FUNCTION_URL}/contact-submit`;
 
 const ContactForm = () => {
   const [formData, setFormData] = useState({
     firstName: '',
-    lastName: '',
     email: '',
-    phone: '',
     companyOrWebsite: '',
     projectType: '',
-    budget: '',
-    timeline: '',
     notes: '',
-    goals: '',
-    previousExperience: '',
-    referralSource: '',
     newsletter: false,
     privacy: false,
   });
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
-  const [showMore, setShowMore] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
-  // ❗ invisible reCAPTCHA + honeypot + light rate limit
+  // Invisible reCAPTCHA + honeypot + light rate limit
   const recaptchaRef = useRef(null);
   const honeypotRef = useRef(null);
   const [lastSubmitAt, setLastSubmitAt] = useState(0); // 30s client cooldown
@@ -74,12 +46,12 @@ const ContactForm = () => {
     setFormData((p) => ({ ...p, [name]: type === 'checkbox' ? checked : value }));
     if (errors[name]) setErrors((p) => ({ ...p, [name]: '' }));
   };
+
   const handleProjectType = (type) => {
     setFormData((p) => ({ ...p, projectType: type }));
     if (errors.projectType) setErrors((p) => ({ ...p, projectType: '' }));
   };
 
-  // ✅ ultra-fast eligibility check for button color + disabled state
   const canSubmit = useMemo(() => {
     const emailOk = /\S+@\S+\.\S+/.test(formData.email);
     return (
@@ -90,14 +62,7 @@ const ContactForm = () => {
       !!formData.privacy &&
       !isSubmitting
     );
-  }, [
-    formData.firstName,
-    formData.email,
-    formData.companyOrWebsite,
-    formData.projectType,
-    formData.privacy,
-    isSubmitting,
-  ]);
+  }, [formData, isSubmitting]);
 
   const validateForm = () => {
     const errs = {};
@@ -140,7 +105,6 @@ const ContactForm = () => {
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok || data?.error) {
-        // mirror a friendly message; real details are handled server-side
         const msg =
           data?.error === 'rate_limited_ip' || data?.error === 'rate_limited_email'
             ? 'Too many attempts. Please try again later.'
@@ -172,10 +136,6 @@ const ContactForm = () => {
             <p className="text-text-secondary mb-6 max-w-2xl mx-auto">
               You’ll get a reply within 24 hours with next steps and time slots for a discovery call.
             </p>
-            {/* If you want a manual reset button, uncomment:
-            <Button onClick={() => setSubmitSuccess(false)} className="bg-accent hover:bg-accent/90">
-              Submit another request
-            </Button> */}
           </div>
         </div>
       </section>
@@ -195,7 +155,7 @@ const ContactForm = () => {
             </p>
           </div>
 
-          {/* ❗ Invisible reCAPTCHA + honeypot */}
+          {/* Invisible reCAPTCHA + honeypot */}
           <ReCAPTCHA ref={recaptchaRef} sitekey={RECAPTCHA_SITE_KEY} size="invisible" />
           <input
             ref={honeypotRef}
@@ -270,43 +230,7 @@ const ContactForm = () => {
               {errors.projectType && <p className="mt-2 text-sm text-destructive">{errors.projectType}</p>}
             </div>
 
-            {/* Optional qualifiers */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Budget (optional)</label>
-                <select
-                  name="budget"
-                  value={formData.budget}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background"
-                >
-                  <option value="">Select budget</option>
-                  {budgetRanges.map((b) => (
-                    <option key={b} value={b}>
-                      {b}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-2">Timeline (optional)</label>
-                <select
-                  name="timeline"
-                  value={formData.timeline}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-background"
-                >
-                  <option value="">Select timeline</option>
-                  {timelineOptions.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Short message */}
+            {/* Short message (optional) */}
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Anything else? (optional)</label>
               <textarea
@@ -318,57 +242,6 @@ const ContactForm = () => {
                 placeholder="Add context, goals, links, or key challenges…"
               />
             </div>
-
-            {/* Progressive details */}
-            {!showMore ? (
-              <button type="button" onClick={() => setShowMore(true)} className="text-sm text-primary underline">
-                Add more details (phone, goals, past efforts)
-              </button>
-            ) : (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Input
-                    label="Phone (optional)"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    placeholder="+1 (555) 123-4567"
-                  />
-                  <Input
-                    label="How did you hear about us? (optional)"
-                    name="referralSource"
-                    value={formData.referralSource}
-                    onChange={handleInputChange}
-                    placeholder="Google, referral, social…"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md-grid-cols-2 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">Business Goals (optional)</label>
-                    <textarea
-                      name="goals"
-                      value={formData.goals}
-                      onChange={handleInputChange}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-                      placeholder="Revenue targets, market expansion, brand lift…"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">Previous Marketing (optional)</label>
-                    <textarea
-                      name="previousExperience"
-                      value={formData.previousExperience}
-                      onChange={handleInputChange}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-                      placeholder="What worked? What didn’t?"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* Preferences */}
             <div className="space-y-4 pt-6 border-t border-border">
