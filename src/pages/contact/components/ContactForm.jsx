@@ -115,7 +115,7 @@ const ContactForm = () => {
       // honeypot should remain empty for humans
       const honeypot = honeypotRef.current?.value || '';
       if (honeypot) {
-      throw new Error('Bot detected.');
+        throw new Error('Bot detected.');
       }
 
       // Insert into Supabase
@@ -134,7 +134,7 @@ const ContactForm = () => {
         ]);
 
       if (error) {
-        console.error(error);
+      console.error(error);
         throw new Error('We could not submit your request. Please try again.');
       }
 
@@ -175,7 +175,8 @@ const ContactForm = () => {
         <div className="bg-card rounded-2xl shadow-brand-lg p-8">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold text-foreground mb-3">
-              Ready to grow? <span className="text-gradient">Tell us the basics</span>
+              Ready to grow?{' '}
+              <span className="text-gradient">Tell us the basics</span>
             </h2>
             <p className="text-text-secondary max-w-2xl mx-auto">
               Quick form. Real humans. We’ll tailor our first call to your needs.
@@ -235,7 +236,8 @@ const ContactForm = () => {
             {/* Project type chips */}
             <div>
               <label className="block text-sm font-medium text-foreground mb-3">
-                What do you need? <span className="text-destructive">*</span>
+                What do you need?{' '}
+                <span className="text-destructive">*</span>
               </label>
               <div className="flex flex-wrap gap-2">
                 {projectTypes.map((type) => {
@@ -259,7 +261,9 @@ const ContactForm = () => {
                 })}
               </div>
               {errors.projectType && (
-                <p className="mt-2 text-sm text-destructive">{errors.projectType}</p>
+                <p className="mt-2 text-sm text-destructive">
+                  {errors.projectType}
+                </p>
               )}
             </div>
 
