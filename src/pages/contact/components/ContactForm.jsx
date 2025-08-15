@@ -1,10 +1,18 @@
 import React, { useMemo, useRef, useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import ReCAPTCHA from 'react-google-recaptcha';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 import { Checkbox } from '../../../components/ui/Checkbox';
 
+// Initialise Supabase client once at module scope
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
+
+// Available project types
 const projectTypes = [
   'Paid Advertising (PPC/Social)',
   'SEO & Content Marketing',
@@ -19,7 +27,6 @@ const projectTypes = [
 ];
 
 const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
-const EDGE_URL = `${import.meta.env.VITE_FUNCTION_URL}/contact-submit`;
 
 const ContactForm = () => {
   const [formData, setFormData] = useState({
@@ -36,20 +43,27 @@ const ContactForm = () => {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
-  // Invisible reCAPTCHA + honeypot + light rate limit
+  // Invisible reCAPTCHA & honeypot
   const recaptchaRef = useRef(null);
   const honeypotRef = useRef(null);
   const [lastSubmitAt, setLastSubmitAt] = useState(0); // 30s client cooldown
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((p) => ({ ...p, [name]: type === 'checkbox' ? checked : value }));
-    if (errors[name]) setErrors((p) => ({ ...p, [name]: '' }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
   };
 
   const handleProjectType = (type) => {
-    setFormData((p) => ({ ...p, projectType: type }));
-    if (errors.projectType) setErrors((p) => ({ ...p, projectType: '' }));
+    setFormData((prev) => ({ ...prev, projectType: type }));
+    if (errors.projectType) {
+      setErrors((prev) => ({ ...prev, projectType: '' }));
+    }
   };
 
   const canSubmit = useMemo(() => {
@@ -68,10 +82,14 @@ const ContactForm = () => {
     const errs = {};
     if (!formData.firstName.trim()) errs.firstName = 'First name is required';
     if (!formData.email.trim()) errs.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) errs.email = 'Email is invalid';
-    if (!formData.companyOrWebsite.trim()) errs.companyOrWebsite = 'Company or website is required';
-    if (!formData.projectType) errs.projectType = 'Please pick a project type';
-    if (!formData.privacy) errs.privacy = 'You must accept the privacy policy';
+    else if (!/\S+@\S+\.\S+/.test(formData.email))
+      errs.email = 'Email is invalid';
+    if (!formData.companyOrWebsite.trim())
+      errs.companyOrWebsite = 'Company or website is required';
+    if (!formData.projectType)
+      errs.projectType = 'Please pick a project type';
+    if (!formData.privacy)
+      errs.privacy = 'You must accept the privacy policy';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -81,8 +99,8 @@ const ContactForm = () => {
     setSubmitError('');
     if (!validateForm()) return;
 
-    // simple client-side cooldown to deter spam bursts
     const now = Date.now();
+    // prevent spamming
     if (now - lastSubmitAt < 30_000) {
       setSubmitError('Please wait a few seconds before trying again.');
       return;
@@ -90,28 +108,34 @@ const ContactForm = () => {
 
     setIsSubmitting(true);
     try {
-      // get an invisible reCAPTCHA token
-      const token = await recaptchaRef.current.executeAsync();
+      // get reCAPTCHA token (ignored for now)
+      await recaptchaRef.current.executeAsync();
       recaptchaRef.current.reset();
 
-      // include honeypot value (bots will fill it)
+      // honeypot should remain empty for humans
       const honeypot = honeypotRef.current?.value || '';
+      if (honeypot) {
+      throw new Error('Bot detected.');
+      }
 
-      const res = await fetch(EDGE_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, recaptchaToken: token, honeypot }),
-      });
+      // Insert into Supabase
+      const { error } = await supabase
+        .from('contact_requests')
+        .insert([
+          {
+            first_name: formData.firstName,
+            email: formData.email,
+            company_or_website: formData.companyOrWebsite,
+            project_type: formData.projectType,
+            notes: formData.notes,
+            newsletter: formData.newsletter,
+            privacy: formData.privacy,
+          },
+        ]);
 
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || data?.error) {
-        const msg =
-          data?.error === 'rate_limited_ip' || data?.error === 'rate_limited_email'
-            ? 'Too many attempts. Please try again later.'
-            : data?.error === 'captcha_failed'
-            ? 'Robot check failed. Please try again.'
-            : 'We could not submit your request. Please try again.';
-        throw new Error(msg);
+      if (error) {
+        console.error(error);
+        throw new Error('We could not submit your request. Please try again.');
       }
 
       setSubmitSuccess(true);
@@ -132,9 +156,12 @@ const ContactForm = () => {
             <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-6">
               <Icon name="CheckCircle" size={32} className="text-success" />
             </div>
-            <h3 className="text-2xl font-bold text-foreground mb-4">Thanks — we’re on it!</h3>
+            <h3 className="text-2xl font-bold text-foreground mb-4">
+              Thanks — we’re on it!
+            </h3>
             <p className="text-text-secondary mb-6 max-w-2xl mx-auto">
-              You’ll get a reply within 24 hours with next steps and time slots for a discovery call.
+              You’ll get a reply within 24 hours with next steps and time slots
+              for a discovery call.
             </p>
           </div>
         </div>
@@ -156,7 +183,11 @@ const ContactForm = () => {
           </div>
 
           {/* Invisible reCAPTCHA + honeypot */}
-          <ReCAPTCHA ref={recaptchaRef} sitekey={RECAPTCHA_SITE_KEY} size="invisible" />
+          <ReCAPTCHA
+            ref={recaptchaRef}
+            sitekey={RECAPTCHA_SITE_KEY}
+            size="invisible"
+          />
           <input
             ref={honeypotRef}
             type="text"
@@ -227,12 +258,16 @@ const ContactForm = () => {
                   );
                 })}
               </div>
-              {errors.projectType && <p className="mt-2 text-sm text-destructive">{errors.projectType}</p>}
+              {errors.projectType && (
+                <p className="mt-2 text-sm text-destructive">{errors.projectType}</p>
+              )}
             </div>
 
             {/* Short message (optional) */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Anything else? (optional)</label>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Anything else? (optional)
+              </label>
               <textarea
                 name="notes"
                 value={formData.notes}
@@ -261,7 +296,9 @@ const ContactForm = () => {
                 error={errors.privacy}
                 required
               />
-              {!!submitError && <p className="text-sm text-destructive">{submitError}</p>}
+              {!!submitError && (
+                <p className="text-sm text-destructive">{submitError}</p>
+              )}
             </div>
 
             {/* Submit */}
@@ -276,14 +313,18 @@ const ContactForm = () => {
                 aria-disabled={!canSubmit}
                 className={[
                   'transition-colors',
-                  canSubmit ? 'bg-blue-600 hover:bg-blue-700' : 'bg-slate-300 hover:bg-slate-300 cursor-not-allowed',
+                  canSubmit
+                    ? 'bg-blue-600 hover:bg-blue-700'
+                    : 'bg-slate-300 hover:bg-slate-300 cursor-not-allowed',
                 ].join(' ')}
                 iconName="Send"
                 iconPosition="right"
               >
                 {isSubmitting ? 'Sending…' : 'Send Request'}
               </Button>
-              <p className="text-center text-sm text-text-secondary mt-4">We reply within 24 hours.</p>
+              <p className="text-center text-sm text-text-secondary mt-4">
+                We reply within 24 hours.
+              </p>
             </div>
           </form>
         </div>
